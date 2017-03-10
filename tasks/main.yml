@@ -176,7 +176,7 @@
   when: not instance_config.plone_buildout_git_repo
   template:
     src=buildout.cfg.j2
-    dest={{ plone_instance_home }}/buildout.cfg
+    dest={{ plone_instance_home }}/{{ plone_buildout_cfg }}
     owner={{ instance_config.plone_buildout_user }}
     group={{ instance_config.plone_group }}
     backup=yes
@@ -212,14 +212,14 @@
 - name: pip install zc.buildout
   command: "{{ plone_instance_home }}/bin/pip install zc.buildout"
   args:
-    creates: "{{ plone_instance_home }}/bin/buildout"
+    creates: "{{ plone_instance_home }}/bin/buildout -c {{ plone_buildout_cfg }}"
   when: instance_config.plone_version >= '5.0' and buildout_status.stat.exists == False
   become_user: "{{ instance_config.plone_buildout_user }}"
 
 # Plone < 5.0; use bootstrap
 - name: Bootstrap buildout
-  command: ../python{{ plone_python_version }}/bin/python{{ plone_python_version }} bootstrap.py --setuptools-version=8.0.4
-    creates={{ plone_instance_home }}/bin/buildout
+  command: ../python{{ plone_python_version }}/bin/python{{ plone_python_version }} bootstrap.py -c {{ plone_buildout_cfg }} --setuptools-version=8.0.4
+    creates={{ plone_instance_home }}/bin/buildout -c {{ plone_buildout_cfg }}
     chdir={{ plone_instance_home }}
   when: instance_config.plone_version < '5.0' and buildout_status.stat.exists == False
   become_user: "{{ instance_config.plone_buildout_user }}"
@@ -228,7 +228,7 @@
   when: instance_config.plone_always_run_buildout or
         instance_config.plone_autorun_buildout and
         (instance_status.changed or extra_dir_copy_result.changed or not buildout_status.stat.exists)
-  shell: "bin/buildout > buildout.log 2>&1"
+  shell: "bin/buildout -c {{ plone_buildout_cfg }} > buildout.log 2>&1"
   args:
     chdir: "{{ plone_instance_home }}"
   become_user: "{{ instance_config.plone_buildout_user }}"
