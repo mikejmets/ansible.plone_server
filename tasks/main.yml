@@ -313,6 +313,14 @@
     name='{{ supervisor_instance_discriminator }}zeoserver'
     state=present
 
+- name: Supervisor zeoserver is restarted
+  when: instance_config.plone_use_supervisor and
+        instance_config.plone_restart_after_buildout and
+        ran_buildout.changed
+  supervisorctl:
+    name={{ supervisor_instance_discriminator }}zeoserver
+    state=restarted
+
 - name: Supervisor zeoclient tasks are present
   when: instance_config.plone_use_supervisor
   supervisorctl:
